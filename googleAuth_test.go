@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	key = "RXOOV3HI4KGVTEST"
+	key = "TESTTESTTESTTEST"
 )
 
 func TestGetCode(t *testing.T) {

@@ -13,9 +13,10 @@ googleAuthenticator 谷歌身份验证器，即谷歌动态口令，Google身份
 > 4、输出大写字符串，即秘钥 
 >
 
-## 伪代码
+
+### 伪代码
 ```
- function GoogleAuthenticatorCode(string secret)      
+ func GoogleAuthenticatorCode(string secret)      
  {
     key := base32decode(secret)   
     message := floor(current Unix time / 30)      
@@ -30,14 +31,41 @@ googleAuthenticator 谷歌身份验证器，即谷歌动态口令，Google身份
     return code
  }
 ```
+
+## 动态码生成
+> 1.基于密钥和时间计算一个HMAC-SHA1的hash值，这个hash是160 bit的，
+>
+> 2.将这个hash值随机取连续的4个字节生成32位整数，
+>
+> 3.将整数取31位
+>
+> 4.取模得到一个的整数。
+
+### 伪代码
+
+```
+  func GoogleAuthenticatorCode(string secret){
+   key := base32decode(secret)      
+   message := counter encoded on 8 bytes      
+   hash := HMAC-SHA1(key, message)      
+   offset := last nibble of hash      
+   truncatedHash := hash[offset..offset+3]  
+   // 4 bytes starting at the offset      
+   // Set the first bit of truncatedHash to zero  
+   // remove the most significant bit      
+   code := truncatedHash mod 1000000      
+   // pad code with 0 until length of code is 6      
+   return code
+  }
+```
+
 ## 使用
 ```
 go get -u https://github.com/crazykun/googleAuth
 ```
 
 
-## 用途
-例: JumpServer登录时google二次验证
+## 示例
 
 ```
 package main
@@ -50,12 +78,36 @@ import (
 
 func main() {
 
-	str := `RXOOV3HI4KGVTEST`
+	str := `TESTTESTTESTTEST`
 	code, _ := googleAuth.GetCode(str)
 
 	fmt.Println(code) 
 
 }
 ```
+
+JumpServer使用ssh脚本实现一键登录, 自动输入google二次验证
+```
+go build example/main.go -o googleAuth
+
+
+
+#!/bin/sh
+code=`./googleAuth TESTTESTTEST`
+
+export LC_CTYPE="en_US.UTF-8"
+expect -c "
+spawn ssh root@127.0.0.2 -p22
+expect \"*ode]:\"
+send \"$code\r\"
+expect \"*Opt> \"
+send \"1\r\"
+expect \"*Host]>\"
+send \"server_name\r\"
+expect \"*]$\"
+interact
+"
+```
+
 
 
