@@ -110,4 +110,6 @@ interact
 ```
 
 
-
+## 其他
+win版使用xshell软件时， 可使用Xshell-OTP自动登录跳板机
+地址：[Xshell-OTP](https://github.com/ms2008/Xshell-OTP)
